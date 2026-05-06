@@ -7,9 +7,8 @@
         <header class="d-flex align-items-center justify-content-between px-4 py-3 bg-dark border-bottom border-secondary">
             <div class="d-flex align-items-center gap-3">
                 {{-- Bot avatar --}}
-                <div class="position-relative rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                    style="width:40px; height:40px; background: linear-gradient(135deg,#6366f1,#8b5cf6);">
-                    <i class="bi bi-robot text-white fs-6"></i>
+                <div class="position-relative d-flex align-items-center justify-content-center flex-shrink-0">
+                    <img src="{{ asset('img/logo.png') }}" alt="logo.png" class="img-fluid" style="width:50px; height:50px;">
                     <span class="online-dot position-absolute bottom-0 end-0 bg-success border border-dark rounded-circle"
                         style="width:12px; height:12px;"></span>
                 </div>
