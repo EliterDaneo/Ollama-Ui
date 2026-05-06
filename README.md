@@ -1,58 +1,171 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ChatBot UI — Laravel × Ollama
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi chat berbasis web yang menghubungkan antarmuka modern Bootstrap 5 dengan model AI lokal melalui [Ollama](https://ollama.com). Semua percakapan tersimpan di database per sesi anonim — tanpa login, tanpa akun.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Fitur
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Antarmuka chat real-time dengan typing indicator
+- Sesi anonim berbasis cookie (tidak perlu login)
+- Avatar splash otomatis dari singkatan nama sesi dengan warna unik per pengguna
+- Riwayat percakapan tersimpan di database dan tampil saat halaman dibuka kembali
+- Konfigurasi model Ollama (model, temperature, system prompt) tersimpan di DB dan mudah diubah
+- Hapus riwayat chat sekaligus bersihkan sesi dari DB
+- Pure Bootstrap 5 + Bootstrap Icons — tanpa custom CSS framework tambahan
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Prasyarat
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Pastikan sudah terinstal di mesin lokal:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Tools                        | Versi minimum                      |
+| ---------------------------- | ---------------------------------- |
+| PHP                          | 8.2                                |
+| Composer                     | 2.x                                |
+| Laravel                      | 11.x                               |
+| MySQL / SQLite               | —                                  |
+| [Ollama](https://ollama.com) | terbaru                            |
+| Model Ollama                 | `llama3.2:3b` (atau sesuai config) |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## Instalasi
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 1. Clone repositori
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/username/chatbot-ui.git
+cd chatbot-ui
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Install dependensi PHP
 
-## Contributing
+```bash
+composer install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Salin file environment
 
-## Code of Conduct
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. Konfigurasi database
 
-## Security Vulnerabilities
+Edit `.env` sesuai koneksi database yang dipakai:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=chatbot_ui
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## License
+> Untuk penggunaan cepat tanpa setup MySQL, ganti ke `DB_CONNECTION=sqlite` dan buat file `database/database.sqlite`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 5. Jalankan migrasi
+
+Migration akan membuat 3 tabel sekaligus menyeed konfigurasi Ollama default:
+
+```bash
+php artisan migrate
+```
+
+### 6. Jalankan Ollama
+
+Pastikan Ollama berjalan di background dan model sudah diunduh:
+
+```bash
+ollama serve
+ollama pull llama3.2:3b
+```
+
+### 7. Jalankan aplikasi
+
+```bash
+php artisan serve
+```
+
+Buka browser di `http://localhost:8000/chat`.
+
+---
+
+## Struktur file yang ditambahkan
+
+```
+app/
+├── Http/Controllers/
+│   └── ChatController.php      # index, store, destroy
+└── Models/
+    ├── OllamaConfig.php        # konfigurasi model Ollama
+    ├── ChatSession.php         # sesi anonim + helper avatar
+    └── ChatMessage.php         # pesan user & assistant
+
+database/migrations/
+    ├── ..._create_ollama_configs_table.php
+    ├── ..._create_chat_sessions_table.php
+    └── ..._create_chat_messages_table.php
+
+resources/views/
+    ├── layouts/app.blade.php   # layout utama Bootstrap 5
+    └── chat.blade.php          # halaman chat
+
+routes/web.php                  # GET /chat, POST /chat/message, DELETE /chat/session
+```
+
+---
+
+## Skema database
+
+```
+ollama_configs          chat_sessions                  chat_messages
+──────────────          ─────────────────────          ──────────────────────
+id                      id                             id
+model                   session_token (unique)         chat_session_id  → FK
+base_url                guest_name                     role (user|assistant|system)
+temperature             avatar_color                   content
+top_p                   ollama_config_id  → FK         token_count
+repeat_penalty          last_active_at                 response_ms
+system_prompt           timestamps                     timestamps
+is_active
+timestamps
+```
+
+Penghapusan sesi otomatis membersihkan semua pesan terkait via `cascadeOnDelete()`.
+
+---
+
+## Konfigurasi Ollama
+
+Konfigurasi model tersimpan di tabel `ollama_configs`. Nilai default di-seed saat migrasi:
+
+| Parameter        | Default                  |
+| ---------------- | ------------------------ |
+| `model`          | `llama3.2:3b`            |
+| `base_url`       | `http://localhost:11434` |
+| `temperature`    | `0.7`                    |
+| `top_p`          | `0.9`                    |
+| `repeat_penalty` | `1.1`                    |
+
+Untuk mengganti model, ubah langsung di database atau tambahkan seeder/command tersendiri.
+
+---
+
+## Routes
+
+| Method   | URI             | Fungsi                                         |
+| -------- | --------------- | ---------------------------------------------- |
+| `GET`    | `/chat`         | Tampilkan halaman chat + riwayat sesi          |
+| `POST`   | `/chat/message` | Kirim pesan, simpan ke DB, balasan dari Ollama |
+| `DELETE` | `/chat/session` | Hapus sesi + semua pesan, reset cookie         |
+
+---
+
+## Lisensi
+
+[MIT](https://opensource.org/licenses/MIT)
